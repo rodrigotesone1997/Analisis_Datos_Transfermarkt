@@ -1,0 +1,2 @@
+class scraping_transfermarkt:
+
