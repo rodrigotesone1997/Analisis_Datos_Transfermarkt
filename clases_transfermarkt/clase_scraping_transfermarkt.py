@@ -18,7 +18,7 @@ class scraping_transfermarkt:
                 'equipo_abandonado',
                 'nacionalidad_equipo_abandonado',
                 'nacionalidad_equipo_unido',
-                'equipo_ingresado',
+                'equipo_unido',
                 'fee',
             ]
 
@@ -42,8 +42,8 @@ class scraping_transfermarkt:
                 player = columns[1]
                 tds = player.find_all('td')
 
-                url_imagen = tds[0].find('img')['data-src']
-                transfer['url_imagen'] = url_imagen
+                url_foto = tds[0].find('img')['data-src']
+                transfer['url_imagen'] = url_foto
 
                 nombre_completo = tds[1].find('a').text
                 transfer['nombre_completo'] = nombre_completo
@@ -52,7 +52,8 @@ class scraping_transfermarkt:
                 transfer['posicion'] = posicion
                 
                 age = columns[2]
-                transfer['edad'] = int(age.text)
+                edad = int(age.text) if age.text.isdigit() else None
+                transfer['edad'] = edad
 
                 nationality = columns[3]
                 nats = [flag['title'] for flag in nationality.find_all('img')]
@@ -60,31 +61,39 @@ class scraping_transfermarkt:
 
                 left = columns[4]
                 team_elem = left.find('td', class_='hauptlink')
-                equipo_ab = team_elem.find('a').text
-                transfer['equipo_abandonado'] = equipo_ab
+                equipo_or = team_elem.find('a').text
+                transfer['equipo_abandonado'] = equipo_or
                 
                 # No podemos tomar el pais del texto, ya que en algunos casos es el
-                # nombre de la liga. Lo extraemos de la imagen de la bandera.
-                pais_ab = left.find('img', class_='flaggernrahmen')['title']
-                transfer['nacionalidad_equipo_abandonado'] = pais_ab
+                # nombre de la liga. Lo extraemos de la imagen de la bandera. 
+                # Algunos nombres de paises pueden estar en aleman.
+                # Además, cuando el pais de origen o llegada es "Without club", no 
+                # tengo pais
+                pais_or_elem = left.find('img', class_='flaggenrahmen')
+                # Además, cuando el pais de origen o llegada es "Without club", no 
+                # tengo pais
+                pais_or = pais_or_elem['title'] if pais_or_elem else None
+                transfer['nacionalidad_equipo_abandonado'] = pais_or
 
                 joined = columns[5]
                 team_elem = joined.find('td', class_='hauptlink')
-                equipo_un = team_elem.find('a').text
+                equipo_un_elem = team_elem.find('a')
+                # Ademas de las considerasiones para los paises, cuando el equipo de 
+                # llegada es "Retired", el elemento no es un link, y tengo que contarlo
+                # por separado
+                equipo_un = equipo_un_elem.text if equipo_un_elem else 'Retirado'
                 transfer['equipo_unido'] = equipo_un
                 
-                pais_un = joined.find('img', class_='flaggernrahmen')['title']
+                pais_un_elem = joined.find('img', class_='flaggenrahmen')
+                pais_un = pais_un_elem['title'] if pais_un_elem else None
                 transfer['nacionalidad_equipo_unido'] = pais_un
 
-                
-                tr_date = columns[6]
-                mkt_value = columns[7]
+                # tr_date = columns[6]
+                # mkt_value = columns[7]
                 fee = columns[8]
-                pprint(transfer)
+                transfer['fee'] = fee.find('a').text
 
                 transfers_list.append(transfer)
-            if i==1:
-                break
         
         return transfers_list
 
@@ -95,4 +104,6 @@ class scraping_transfermarkt:
 url_transf = r'https://www.transfermarkt.com/transfers/neuestetransfers/statistik/plus/?plus=1&galerie=0&wettbewerb_id=alle&land_id=&minMarktwert=0&maxMarktwert=200.000.000&yt0=Show'
 
 scraper = scraping_transfermarkt()
-scraper.scraper_transferencias(url_transf)
+transferencias = scraper.scraper_transferencias(url_transf)
+
+pprint(transferencias)
