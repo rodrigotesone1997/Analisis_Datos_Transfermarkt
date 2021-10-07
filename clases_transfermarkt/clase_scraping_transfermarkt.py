@@ -32,78 +32,97 @@ class scraping_transfermarkt:
 
         for i, row in enumerate(body.contents):
             # Ignoramos filas None
-            if row.name:
+            if not row.name: continue
 
-                transfer = dict.fromkeys(keys)
+            transfer = dict.fromkeys(keys)
 
-                columns = row.contents
-                '''Cada columna tiene un estilo especial, extraemos los datos de a una
-                '''
-                player = columns[1]
-                tds = player.find_all('td')
+            columns = row.contents
+            '''Cada columna tiene un estilo especial, extraemos los datos de a una
+            '''
+            player = columns[1]
+            tds = player.find_all('td')
 
-                url_foto = tds[0].find('img')['data-src']
-                transfer['url_imagen'] = url_foto
+            url_foto = tds[0].find('img')['data-src']
+            transfer['url_imagen'] = url_foto
 
-                nombre_completo = tds[1].find('a').text
-                transfer['nombre_completo'] = nombre_completo
+            nombre_completo = tds[1].find('a').text
+            transfer['nombre_completo'] = nombre_completo
 
-                posicion = tds[2].text
-                transfer['posicion'] = posicion
-                
-                age = columns[2]
-                edad = int(age.text) if age.text.isdigit() else None
-                transfer['edad'] = edad
+            posicion = tds[2].text
+            transfer['posicion'] = posicion
+            
+            age = columns[2]
+            edad = int(age.text) if age.text.isdigit() else None
+            transfer['edad'] = edad
 
-                nationality = columns[3]
-                nats = [flag['title'] for flag in nationality.find_all('img')]
-                transfer['nacionalidad'] = nats
+            nationality = columns[3]
+            nats = [flag['title'] for flag in nationality.find_all('img')]
+            transfer['nacionalidad'] = nats
 
-                left = columns[4]
-                team_elem = left.find('td', class_='hauptlink')
-                equipo_or = team_elem.find('a').text
-                transfer['equipo_abandonado'] = equipo_or
-                
-                # No podemos tomar el pais del texto, ya que en algunos casos es el
-                # nombre de la liga. Lo extraemos de la imagen de la bandera. 
-                # Algunos nombres de paises pueden estar en aleman.
-                # Además, cuando el pais de origen o llegada es "Without club", no 
-                # tengo pais
-                pais_or_elem = left.find('img', class_='flaggenrahmen')
-                # Además, cuando el pais de origen o llegada es "Without club", no 
-                # tengo pais
-                pais_or = pais_or_elem['title'] if pais_or_elem else None
-                transfer['nacionalidad_equipo_abandonado'] = pais_or
+            left = columns[4]
+            team_elem = left.find('td', class_='hauptlink')
+            equipo_or = team_elem.find('a').text
+            transfer['equipo_abandonado'] = equipo_or
+            
+            # No podemos tomar el pais del texto, ya que en algunos casos es el
+            # nombre de la liga. Lo extraemos de la imagen de la bandera. 
+            # Algunos nombres de paises pueden estar en aleman.
+            # Además, cuando el pais de origen o llegada es "Without club", no 
+            # tengo pais
+            pais_or_elem = left.find('img', class_='flaggenrahmen')
+            # Además, cuando el pais de origen o llegada es "Without club", no 
+            # tengo pais
+            pais_or = pais_or_elem['title'] if pais_or_elem else None
+            transfer['nacionalidad_equipo_abandonado'] = pais_or
 
-                joined = columns[5]
-                team_elem = joined.find('td', class_='hauptlink')
-                equipo_un_elem = team_elem.find('a')
-                # Ademas de las considerasiones para los paises, cuando el equipo de 
-                # llegada es "Retired", el elemento no es un link, y tengo que contarlo
-                # por separado
-                equipo_un = equipo_un_elem.text if equipo_un_elem else 'Retirado'
-                transfer['equipo_unido'] = equipo_un
-                
-                pais_un_elem = joined.find('img', class_='flaggenrahmen')
-                pais_un = pais_un_elem['title'] if pais_un_elem else None
-                transfer['nacionalidad_equipo_unido'] = pais_un
+            joined = columns[5]
+            team_elem = joined.find('td', class_='hauptlink')
+            equipo_un_elem = team_elem.find('a')
+            # Ademas de las considerasiones para los paises, cuando el equipo de 
+            # llegada es "Retired", el elemento no es un link, y tengo que contarlo
+            # por separado
+            equipo_un = equipo_un_elem.text if equipo_un_elem else 'Retirado'
+            transfer['equipo_unido'] = equipo_un
+            
+            pais_un_elem = joined.find('img', class_='flaggenrahmen')
+            pais_un = pais_un_elem['title'] if pais_un_elem else None
+            transfer['nacionalidad_equipo_unido'] = pais_un
 
-                # tr_date = columns[6]
-                # mkt_value = columns[7]
-                fee = columns[8]
-                transfer['fee'] = fee.find('a').text
+            # tr_date = columns[6]
+            # mkt_value = columns[7]
+            fee_elem = columns[8]
+            fee = fee_elem.find('a').text
+            text, _, money = fee.partition('€')
+            if money:
+                fee = self.convert_currency_float(money)
+            else:
+                fee = text
 
-                transfers_list.append(transfer)
+            transfer['fee'] = fee
+
+            transfers_list.append(transfer)
         
         return transfers_list
 
+    def convert_currency_float(self, text):
+        if text.endswith('Th.'):
+            multiplier = 1000
+            n = 3
+        elif text.endswith('m'):
+            multiplier = 1_000_000
+            n = 1
+        else:
+            raise ValueError('No puedo convertir este valor')
+        
+        value = float(text[:-n])
+        return value*multiplier
 
     def scraper_empresas(url):
         pass
 
-url_transf = r'https://www.transfermarkt.com/transfers/neuestetransfers/statistik/plus/?plus=1&galerie=0&wettbewerb_id=alle&land_id=&minMarktwert=0&maxMarktwert=200.000.000&yt0=Show'
+url_transf = r'https://www.transfermarkt.com/transfers/neuestetransfers/statistik/plus/?plus=1&galerie=0&wettbewerb_id=alle&land_id=9&minMarktwert=0&maxMarktwert=200.000.000&yt0=Show'
 
 scraper = scraping_transfermarkt()
 transferencias = scraper.scraper_transferencias(url_transf)
 
-pprint(transferencias)
+pprint([t['fee'] for t in transferencias])
