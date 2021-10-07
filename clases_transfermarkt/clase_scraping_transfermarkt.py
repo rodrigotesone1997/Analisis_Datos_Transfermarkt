@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from requests.api import head
 
 from pprint import pprint
 
@@ -120,9 +119,10 @@ class scraping_transfermarkt:
     def scraper_empresas(url):
         pass
 
-url_transf = r'https://www.transfermarkt.com/transfers/neuestetransfers/statistik/plus/?plus=1&galerie=0&wettbewerb_id=alle&land_id=9&minMarktwert=0&maxMarktwert=200.000.000&yt0=Show'
+if __name__ == '__main__':
+    url_transf = r'https://www.transfermarkt.com/transfers/neuestetransfers/statistik/plus/?plus=1&galerie=0&wettbewerb_id=alle&land_id=9&minMarktwert=0&maxMarktwert=200.000.000&yt0=Show'
 
-scraper = scraping_transfermarkt()
-transferencias = scraper.scraper_transferencias(url_transf)
+    scraper = scraping_transfermarkt()
+    transferencias = scraper.scraper_transferencias(url_transf)
 
-pprint([t['fee'] for t in transferencias])
+    pprint(transferencias)
