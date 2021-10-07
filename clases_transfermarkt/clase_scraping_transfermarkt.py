@@ -18,6 +18,8 @@ class scraping_transfermarkt:
                 'nacionalidad_equipo_abandonado',
                 'nacionalidad_equipo_unido',
                 'equipo_unido',
+                'fecha_transferencia',
+                'valor_mercado',
                 'fee',
             ]
 
@@ -29,15 +31,15 @@ class scraping_transfermarkt:
 
         transfers_list = []
 
-        for i, row in enumerate(body.contents):
+        for row in body.contents:
             # Ignoramos filas None
             if not row.name: continue
 
             transfer = dict.fromkeys(keys)
 
             columns = row.contents
-            '''Cada columna tiene un estilo especial, extraemos los datos de a una
-            '''
+            #Cada columna tiene un estilo especial, extraemos los datos de a una
+            
             player = columns[1]
             tds = player.find_all('td')
 
@@ -66,8 +68,6 @@ class scraping_transfermarkt:
             # No podemos tomar el pais del texto, ya que en algunos casos es el
             # nombre de la liga. Lo extraemos de la imagen de la bandera. 
             # Algunos nombres de paises pueden estar en aleman.
-            # Además, cuando el pais de origen o llegada es "Without club", no 
-            # tengo pais
             pais_or_elem = left.find('img', class_='flaggenrahmen')
             # Además, cuando el pais de origen o llegada es "Without club", no 
             # tengo pais
@@ -77,7 +77,7 @@ class scraping_transfermarkt:
             joined = columns[5]
             team_elem = joined.find('td', class_='hauptlink')
             equipo_un_elem = team_elem.find('a')
-            # Ademas de las considerasiones para los paises, cuando el equipo de 
+            # Ademas de las consideraciones para los paises, cuando el equipo de 
             # llegada es "Retired", el elemento no es un link, y tengo que contarlo
             # por separado
             equipo_un = equipo_un_elem.text if equipo_un_elem else 'Retirado'
@@ -87,8 +87,12 @@ class scraping_transfermarkt:
             pais_un = pais_un_elem['title'] if pais_un_elem else None
             transfer['nacionalidad_equipo_unido'] = pais_un
 
-            # tr_date = columns[6]
-            # mkt_value = columns[7]
+            tr_date = columns[6]
+            transfer['fecha_transferencia'] = tr_date.txt
+
+            mkt_value = columns[7]
+            transfer['valor_mercado'] = mkt_value.text
+
             fee = columns[8]
             transfer['fee'] = fee.find('a').text
             # text, _, money = fee.partition('€')
