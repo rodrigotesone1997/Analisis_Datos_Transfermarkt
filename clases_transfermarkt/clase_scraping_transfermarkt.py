@@ -89,32 +89,32 @@ class scraping_transfermarkt:
 
             # tr_date = columns[6]
             # mkt_value = columns[7]
-            fee_elem = columns[8]
-            fee = fee_elem.find('a').text
-            text, _, money = fee.partition('€')
-            if money:
-                fee = self.convert_currency_float(money)
-            else:
-                fee = text
+            fee = columns[8]
+            transfer['fee'] = fee.find('a').text
+            # text, _, money = fee.partition('€')
+            # if money:
+            #     fee = self.convert_currency_float(money)
+            # else:
+            #     fee = text
 
-            transfer['fee'] = fee
+            # transfer['fee'] = fee
 
             transfers_list.append(transfer)
         
         return transfers_list
 
-    def convert_currency_float(self, text):
-        if text.endswith('Th.'):
-            multiplier = 1000
-            n = 3
-        elif text.endswith('m'):
-            multiplier = 1_000_000
-            n = 1
-        else:
-            raise ValueError('No puedo convertir este valor')
+    # def convert_currency_float(self, text):
+    #     if text.endswith('Th.'):
+    #         multiplier = 1000
+    #         n = 3
+    #     elif text.endswith('m'):
+    #         multiplier = 1_000_000
+    #         n = 1
+    #     else:
+    #         raise ValueError('No puedo convertir este valor')
         
-        value = float(text[:-n])
-        return value*multiplier
+    #     value = float(text[:-n])
+    #     return value*multiplier
 
     def scraper_empresas(url):
         pass
