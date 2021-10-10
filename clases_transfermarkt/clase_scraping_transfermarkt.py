@@ -7,32 +7,42 @@ class scraping_transfermarkt:
         pass
     def scraper_jugadores(self,url):
 
-        # TODO: Hacer las keys de url_icono_de_banderas y url_icono_de_redes_sociales y añadir sus values
+        keys = [
+            # PRIMERA TABLA
+            'Name',
+            'Date of Birth',
+            'Place of Birth',
+            'Age',
+            'Height',
+            'Citizenship',
+            'Position',
+            'Foot',
+            'Player Agent',
+            'Current Club',
+            'Joined',
+            'Contract Expired',
+            'Contract Option',
+            'Outfitter',
+            'Social Media',
+            'Social Media Icons',
+            'Flags Icons',
+            # SEGUNDA TABLA
+            'Current Club Link',
+            'League',
+            'League Level',
+            # TERCERA TABLA
+            'Market Value',
+            'Last Update Market Value'
+        ]
+        # Creando el diccionario
+        player_info = dict.fromkeys(keys)
 
-        # Algunas llaves estan repetidas pero no importan porque los diccionarios NO permiten tener llaves repetidas
-        # y se encargan de sobreescribir los datos repetidos sin crear llaves nuevas 
-        keys_list = [
-                    'Nombre', 'Fecha de Nacimiento', 'Lugar de Nacimiento', 'Edad',
-                    'Altura', 'Nacionalidad', 'Posición', 'Pie dominante', 'Agente', 'Club Actual', 
-                    'Inicio de Contrato', 'Finalización de su Contrato', 'Patrocinador', 'Redes Sociales', 'Redes Sociales', 
-                    'Url_current_club', 'Club Actual', 'Liga', 'Nivel de Liga', 'Inicio de Contrato', 'Finalización de su Contrato',
-                    'Fecha de Nacimiento', 'Lugar de Nacimiento', 'Nacionalidad', 'Altura', 
-                    'Posición', 'Finalización de su Contrato', 'Situación Internacional', 'Cap/Goals',
-                    'Valor de Mercado', 'Última Revisión del Valor de Mercado'
-                    ]
-        #Lista para almacenar los valores que obtengamos
-        values_list = []
-
-
-        # Los headers nos ayudan a que el sitio web no rechaze nuestras solicitudes
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:63.0) Gecko/20100101 Firefox/63.0'}
+        headers = {'User-Agent': 'placeholder'}
         response = requests.get(url, headers=headers)
-        # Obtenemos el texto de nuestra peticion 
-        content = response.text
-        soup = BeautifulSoup(content, 'lxml')
+        soup = BeautifulSoup(response.content, 'lxml')
 
         """ 
-        Primera Tabla  
+        PRIMERA TABLA  
 
         De esta tabla obtendremos estos datos: 
 
@@ -44,161 +54,136 @@ class scraping_transfermarkt:
                 ]
            
         """
+        # Almacenara todos los valores de data_player
+        values_list = []
 
-        # Primera tabla de los datos del jugador
-        first_table = soup.find('div', class_='info-table info-table--right-space')
+        # PRIMERA TABLA de los datos del jugador
+        first_table = soup.find('div', class_='large-6 large-pull-6 small-12 columns spielerdatenundfakten')
 
         # En data_player almacenamos todos los dataValue de los datos del jugador de la tabla principal
         data_player = first_table.find_all('span', class_='info-table__content info-table__content--bold')
 
-        for info in data_player:
-            # Esto remplaza "\xa0m" por m(metros), del campo edad
-            ordered_info = info.text.strip().replace('\xa0m', 'm')
-            values_list.append(ordered_info)
-
-    
-
-
-        # Buscamos todos las etiquetas <a> de la first tabla
-        all_links_first_table = first_table.find_all('a')
-        # Lista que almacenara todos los links de manera general
-        links = []
-        # Lista que almacenaran los links de sus redes sociales 
-        social_media_list = []
-        # El url del current_club que esta en el codigo fuente viene sin el protocolo https y sin el url inicial
-        # de la homepage, el url que nos da el scraping es como este: 'fc-paris-saint-germain/startseite/verein/583'
-        # Usaremos la lista para almacenar el url con el protolo https del home y el url dado del scraping
-        https_with_url = ['https://www.transfermarkt.com']
-
-        for link in all_links_first_table:
-            # Agregamos cada link a la lista links
-            links.append(link['href'])
-        """ 
-        Estos son todos las url que estaran en la lista links
-        ['/aktuell/waspassiertheute/aktuell/new/datum/1998-12-20', 
-        '/fc-paris-saint-germain/startseite/verein/583', 
-        '/fc-paris-saint-germain/startseite/verein/583', 'http://twitter.com/KMbappe',
-        'http://www.facebook.com/kylianmbappeofficiel/', 'http://www.instagram.com/k.mbappe/']
-
-        Urls que filtraremos, para traer solo las urls que nos interesan.
-        Iteraremos sobre esta lista y mediante su indice escogemos los datos que necesitamos
-
-         """
-        
-        for i in range(2,6):
-            if i == 2:
-                # Añadiremos el url del current club a la lista https_with_club
-                https_with_url.append(links[i])
-            else:
-                # Añadiremos los links de las redes sociales a social_media_list
-                social_media_list.append(links[i])
-        # Agregamos la lista con los links de las redes sociales
-        values_list.append(social_media_list)
-        # Unimos el url del home page con el url dado del scraping que contiene el link current_club
-        url_current_club = ''.join(https_with_url)
-        # Agregamos el link de su club actual
-        values_list.append(url_current_club)
-        
-        
-
-        """ 
-        Segunda Tabla 
-        
-        De esta tabla obtendremos estos datos:
-        
-        data = ['Club Actual', 'Liga', 'Nivel de Liga', 'Inicio de Contrato', 'Finalización de su Contrato']
-
-        """
-        
-        # Segunda Tabla con los datos del jugador
-        second_table = soup.find('div', class_='dataZusatzDaten')
-
-        # Informacion sobre el nombre de su equipo y su liga
-        league_and_team = second_table.find_all('a')
-        for info in league_and_team:
-            ordered_info = info.text.strip()
-            # Agregamos los datos a nuestra lista
-            values_list.append(ordered_info)
-       
-        # Informacion de su contrato y nivel de liga
-        contractinfo_leaguelvl = second_table.find_all('span', class_='dataValue')
-        # Iteramos para extraer los datos
-        for info in contractinfo_leaguelvl:
-            ordered_info = info.text.strip()
-            # Agregamos los datos a nuestra lista
-            values_list.append(ordered_info)
-
-
-
-        """ 
-        Tercera Tabla  
-        
-        De esta tabla obtendremos estos datos:
-
-        data = [
-                'Fecha de Nacimiento', 'Lugar de Nacimiento', 'Nacionalidad', 'Altura', 
-                'Posición', 'Finalización de su Contrato', 'Situación Internacional', 'Cap/Goals'
-                ]
-        """ 
-    
-        # Tercera Tabla con los datos del jugador
-        third_table = soup.find_all('div', class_='dataDaten')
-        # Esta tabla tiene 3 divs llamados dataDaten por lo que iteramos sobre ellos
-        for dataDaten in third_table:
-            spans = dataDaten.find_all('span', class_='dataValue')
-            # Iteramos por los spans que tienen los divs 
-            for span in spans:
-                # El replace soluciona un bug
-                ordered_info = span.text.strip().replace('                                                                            (22)', '')
+        # Iteramos sobre la primera tabla y agregamos los valores a values_list
+        # FIXME: Aca surge la duda ya que los datos de la primera tabla no tienen un patron 
+        # en especifico, en algunos casos tienen los 15 o 14 datos en otros solo tienen 4 o 9
+        # Como desarrollar un patron o metodo que se encarge de esto
+        try:
+            for info in data_player:
+                # Esto elimina los \xa0 del código
+                ordered_info = info.text.strip().replace('\xa0', ' ')
                 values_list.append(ordered_info)
 
+            name = values_list[0]
+            player_info['Name'] = name
 
+            birth_date = values_list[1]
+            player_info['Date of Birth'] = birth_date
+
+            place_of_birth = values_list[2]
+            player_info['Place of Birth'] = place_of_birth
+
+            age = int(values_list[3])
+            player_info['Age'] = age
+
+            height = values_list[4].replace(',', '.')
+            player_info['Height'] = float(height.replace(' m', ''))
+
+            citizenship = values_list[5].split() 
+            player_info['Citizenship'] = citizenship
+
+            position = values_list[6]
+            player_info['Position'] = position
+
+            dominant_foot = values_list[7]
+            player_info['Foot'] = dominant_foot
+
+            player_agent = values_list[8]
+            player_info['Player Agent'] = player_agent
+
+            current_club = values_list[9]
+            player_info['Current Club'] = current_club
+
+            commencement_date = values_list[10]
+            player_info['Joined'] = commencement_date 
+
+            contract_expired = values_list[11]
+            player_info['Contract Expired'] = contract_expired
+            # NOTA: Esto del if lo aplique porque pense que solo el contract option era el que variaba
+            # Si el len de lista es 15 significa que tiene contract_option
+            if len(values_list) == 15:
+                contract_option = values_list[12]
+                player_info['Contract Option'] = contract_option
+
+                outfitter = values_list[13]
+                player_info['Outfitter'] = outfitter if outfitter else None
+            # Si el len de lista es 14 significa que no tiene contract_option
+            else:
+                outfitter = values_list[12]
+                player_info['Outfitter'] = outfitter if outfitter else None
+
+        except IndexError:
+            print('El indice a buscar no existe')
+
+
+        # LINKS DE LA PRIMERA TABLA
+        links_list = []
+        link_images_list = []
+        # El div que contiene las redes sociales
+        social_media_links = first_table.find('div', class_='socialmedia-icons')
+    
+        for link in social_media_links.find_all('a'):
+            # Url de las redes sociales
+            links_list.append(link['href'])
+            # Url de los iconos de las redes sociales
+            link_images_list.append(link.img['data-src'])
+    
+        player_info['Social Media'] = links_list
+        player_info['Social Media Icons'] = link_images_list
+
+        # Banderas de la primera Tabla
+        flags = []
+        url_flags = first_table.find_all('img', class_='flaggenrahmen')
         
+        for flag in url_flags:
+            # Filtra las imagenes de los gifts
+            if 'https://' in flag['src']:
+                flags.append(flag['src'])
+        
+        player_info['Flags Icons'] = flags
         """ 
-        Cuarta Tabla 
-
+        SEGUNDA TABLA 
         De esta tabla obtendremos estos datos:
-        
-        data = ['market_value', 'last_update_market_value']
-
-        En este pedazo de código obtenemos valores como estos:
-        [0]Valor de mercado actual: 160,00 mill. €
-        [1]Última revisión: 01/06/2021
-        [2]Valor más alto: 200,00 mill. € 17/12/2018
-
+        data = [Current Club Link', 'League', 'League Level']
         """
 
-        # Creamos una lista vacia que recibira todos los datos mencionados en la parte de arriba,
-        # de los cuales solo necesitaremos los valores con indice [0] y [1]
-        market_list = []
-        # Cuarta Tabla con los datos del jugador
-        fourth_table = soup.find('div', class_='large-5 columns small-12')
-        market_values = fourth_table.find_all('div', class_='right-td')
-        for market_value in market_values:
-            market_list.append(market_value.text.strip())
-        # Ya que solo necesitamos el valor de mercado actual y su ultima revision
-        # Solo agregamos esos valores a la values_list
-        values_list.append(market_list[0])
-        values_list.append(market_list[1])
-        
-        
+        # SEGUNDA TABLA con los datos del jugador
+        second_table = soup.find('div', class_='dataZusatzDaten')
+        league_and_team = second_table.find_all('span')
+
+        # Completamos la url incompleta que nos da la página
+        link = second_table.find('a')['href']
+        url = ['https://www.transfermarkt.com', link]
+        player_info['Current Club Link'] = ''.join(url)
+
+        player_info['League'] = league_and_team[1].text.strip()
+        player_info['League Level'] = league_and_team[3].text.strip()
+
+
         """ 
-        Aca tendremos el diccionario con los datos del jugador
-        Cuyo diccionario con los datos del jugador se vera asi
-
-        Ejemplo:
-
-        mydict = {Nombre: Messi, Edad: 38, ...}
-        
+        TERCERA TABLA 
+        De esta tabla obtendremos estos datos:
+        data = ['market_value', 'last_update_market_value']
         """
-        # En este diccionario se almacenaran los datos del jugador
-        final_data_player = {}
-        # Unimos las llaves con las valores que scrapeamos
-        zip_iterator = zip(keys_list, values_list)
-        # Convertimos la unión de las listas en un diccionario y lo almacenamos en el 
-        # diccionario final_data_player
-        final_data_player = dict(zip_iterator)
-        print(final_data_player)
+
+        # TERCERA TABLA con los datos del jugador
+        fourth_table = soup.find('div', class_='large-5 columns small-12')
+        # Datos de los valores de mercado 
+        market_values = fourth_table.find_all('div', class_='right-td')
+
+        player_info['Market Value'] = market_values[0].text.strip()
+        player_info['Last Update Market Value'] = market_values[1].text.strip()
+
+        return player_info
 
     def scraper_transferencias(url):
         pass
@@ -206,8 +191,13 @@ class scraping_transfermarkt:
         pass
 
 if __name__ == '__main__':
-    url = 'https://www.transfermarkt.com/kylian-mbappe/profil/spieler/342229'
+    #url = 'https://www.transfermarkt.com/lionel-messi/profil/spieler/28003'
+    #url = 'https://www.transfermarkt.com/kylian-mbappe/profil/spieler/342229'
+    #url = 'https://www.transfermarkt.com/junior-dina-ebimbe/profil/spieler/536482'
+    url = 'https://www.transfermarkt.com/pape-cheikh/profil/spieler/336828'
+    
     player = scraping_transfermarkt()
-    player.scraper_jugadores(url)
+    datos_del_jugador = player.scraper_jugadores(url)
+    print(datos_del_jugador)
     
 
