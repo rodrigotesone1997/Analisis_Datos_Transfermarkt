@@ -5,7 +5,7 @@
   </a>
 </p>
 
-> Tanto [Fer-Bar](https://github.com/Fer-Bar), [smezequiel](https://github.com/smezequiel) como [sstandre](https://github.com/sstandre) pertenecemos a la siguiente comunidad:</br></br>
+<!-- > Tanto [Fer-Bar](https://github.com/Fer-Bar), [smezequiel](https://github.com/smezequiel) como [sstandre](https://github.com/sstandre) pertenecemos a la siguiente comunidad:</br></br> -->
 > <a href="https://discord.gg/JYZAQzgJ" target="_blank"><img alt="Discord" src="https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white" /></a></br>
 > En esa comunidad hubo una maravillosa iniciativa de desarrollar un proyecto de mentorias ¿Como funciona? Algunos nos postulamos como mentores, propusimos nuestro proyecto y el resto de la comunidad se proponia para colaborar en ese proyecto.</br>
 > En este proyecto se propone hacer:</br>
