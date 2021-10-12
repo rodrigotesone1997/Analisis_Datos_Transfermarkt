@@ -32,7 +32,7 @@ class scraping_transfermarkt:
             table = soup.find('table', class_='items')
 
             body = table.find('tbody')
-    
+
             for row in body.contents:
                 # Ignoramos filas None
                 if not row.name: continue
