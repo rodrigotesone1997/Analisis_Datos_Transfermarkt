@@ -1,4 +1,0 @@
-url = 'https://www.transfermarkt.com/lionel-messi/profil/spieler/28003'
-url = 'https://www.transfermarkt.com/kylian-mbappe/profil/spieler/342229'
-url = 'https://www.transfermarkt.com/junior-dina-ebimbe/profil/spieler/536482'
-url = 'https://www.transfermarkt.com/pape-cheikh/profil/spieler/336828'
