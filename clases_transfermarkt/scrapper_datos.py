@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
-from pprint import pprint
 
-class scraping_transfermarkt:
+class scraping:
     def scraper_jugadores(url):
         """
         Aún me falta agregar el contenido de las redes sociales, banderas y demas iconos,  
@@ -63,7 +62,6 @@ class scraping_transfermarkt:
         for info in data_bold:
             info = info.text.strip().replace('\xa0', ' ')
             data_bolds.append(info)
-
         for idx, data_reg in enumerate(data_regular):
             data_reg = data_reg.text.strip().replace(':', '')
             data_regs.append(data_reg)
@@ -78,13 +76,13 @@ class scraping_transfermarkt:
                     player_info['Place of birth'] = data_bolds[idx]
 
                 elif 'Age' in data_regs[idx]:
-                    player_info['Age'] = int(data_bolds[idx])
+                    player_info['Age'] = data_bolds[idx]
 
                 elif 'Height' in data_regs[idx]:
-                    player_info['Height'] = float(data_bolds[idx].replace(',', '.').replace(' m', ''))
+                    player_info['Height'] = data_bolds[idx].replace(',', '.').replace(' m', '')
 
                 elif 'Citizenship' in data_regs[idx]:
-                    player_info['Citizenship'] = data_bolds[idx].split()
+                    player_info['Citizenship'] = ",".join(data_bolds[idx].split())
 
                 elif 'Position' in data_regs[idx]:
                     player_info['Position'] = data_bolds[idx]
@@ -102,13 +100,13 @@ class scraping_transfermarkt:
                     player_info['Joined'] = data_bolds[idx]
 
                 elif 'Contract expires' in data_regs[idx]:
-                    player_info['Contract expires'] = None if data_bolds[idx] == '-' else data_bolds[idx]
+                    player_info['Contract expires'] = "" if data_bolds[idx] == '-' else data_bolds[idx]
 
                 elif 'Contract option' in data_regs[idx]:
-                    player_info['Contract option'] = None if data_bolds[idx] == '-' else data_bolds[idx]  
+                    player_info['Contract option'] = "" if data_bolds[idx] == '-' else data_bolds[idx]  
 
                 elif 'Outfitter' in data_regs[idx]:
-                    player_info['Outfitter'] = None if data_bolds[idx] == '-' else data_bolds[idx]
+                    player_info['Outfitter'] = "" if data_bolds[idx] == '-' else data_bolds[idx]
 
             except IndexError:
                 print('Error con el tope del indice')
@@ -127,8 +125,8 @@ class scraping_transfermarkt:
                 links_list.append(link['href'])
                 link_images_list.append(link.img['data-src'])
         
-            player_info['Social Media'] = links_list
-            player_info['Social Media Icons'] = link_images_list
+            player_info['Social Media'] = ",".join(links_list)
+            player_info['Social Media Icons'] = ",".join(link_images_list)
         # Si no se encuentra el div con las redes sociales se quedan en None
         except:
             print('No se encontro la etiqueta div "socialmedia-icons" que contienen las redes sociales')
@@ -142,7 +140,7 @@ class scraping_transfermarkt:
                 # Filtra las imagenes de los gifts
                 if 'https://' in flag['src']:
                     flags.append(flag['src'])
-            player_info['Flags Icons'] = flags
+            player_info['Flags Icons'] = ",".join(flags)
         except:
             # Si no existen los datos se quedan en None
             print('No se encontro la etiqueta img "flaggenrahmen" que contiene las banderas')
@@ -153,7 +151,7 @@ class scraping_transfermarkt:
         second_table = soup.find('div', class_='dataZusatzDaten')
         try:
             current_link = second_table.find('span', class_='hauptpunkt')
-            link = current_link.a['href'] if 'Retired' not in current_link.text else None
+            link = current_link.a['href'] if 'Retired' not in current_link.text else ""
             # Completamos la url incompleta que nos da la página
             url = ['https://www.transfermarkt.com', link]
             player_info['Current Club Link'] = ''.join(url)
@@ -163,12 +161,12 @@ class scraping_transfermarkt:
 
             data_value = second_table.find('span', class_='dataValue')
             data_item = second_table.find('span', class_='dataItem')
-            player_info['League Level'] = data_value.text.strip() if 'League level:' in data_item.text else None
+            player_info['League Level'] = data_value.text.strip() if 'League level:' in data_item.text else ""
 
         except:
             # Si no existen los datos se quedan en None
             print('Algunos datos de la segunda tabla podrian estar vacios o inexistentes')
-        
+
 
 
         # TERCERA TABLA
@@ -177,7 +175,7 @@ class scraping_transfermarkt:
         try: 
             market_values = fourth_table.find_all('div', class_='right-td')
             market_value = market_values[0].text.strip()
-            player_info['Market Value'] = None if market_value == '-' else market_value
+            player_info['Market Value'] = "" if market_value == '-' else market_value
             player_info['Last Update Market Value'] = market_values[1].text.strip()
         except:
             # Si no existen los datos se quedan en None
@@ -231,30 +229,30 @@ class scraping_transfermarkt:
     
                 nombre_completo = tds[1].find('a').text
                 transfer['nombre_completo'] = nombre_completo
-    
+
                 posicion = tds[2].text
                 transfer['posicion'] = posicion
-                
+
                 age = columns[2]
-                edad = int(age.text) if age.text.isdigit() else None
+                edad = int(age.text) if age.text.isdigit() else ""
                 transfer['edad'] = edad
-    
+
                 nationality = columns[3]
                 nats = [flag['title'] for flag in nationality.find_all('img')]
                 transfer['nacionalidad'] = nats
-    
+
                 left = columns[4]
                 team_elem = left.find('td', class_='hauptlink')
                 equipo_or = team_elem.find('a').text
                 transfer['equipo_abandonado'] = equipo_or
-                
+
                 # No podemos tomar el pais del texto, ya que en algunos casos es el
                 # nombre de la liga. Lo extraemos de la imagen de la bandera. 
                 # Algunos nombres de paises pueden estar en aleman.
                 pais_or_elem = left.find('img', class_='flaggenrahmen')
                 # Además, cuando el pais de origen o llegada es "Without club", no 
                 # tengo pais
-                pais_or = pais_or_elem['title'] if pais_or_elem else None
+                pais_or = pais_or_elem['title'] if pais_or_elem else ""
                 transfer['nacionalidad_equipo_abandonado'] = pais_or
     
                 joined = columns[5]
@@ -267,15 +265,15 @@ class scraping_transfermarkt:
                 transfer['equipo_unido'] = equipo_un
                 
                 pais_un_elem = joined.find('img', class_='flaggenrahmen')
-                pais_un = pais_un_elem['title'] if pais_un_elem else None
+                pais_un = pais_un_elem['title'] if pais_un_elem else ""
                 transfer['nacionalidad_equipo_unido'] = pais_un
     
                 tr_date = columns[6]
                 transfer['fecha_transferencia'] = tr_date.txt
-    
+
                 mkt_value = columns[7]
                 transfer['valor_mercado'] = mkt_value.text
-    
+
                 fee = columns[8]
                 transfer['fee'] = fee.find('a').text
                 # text, _, money = fee.partition('€')
