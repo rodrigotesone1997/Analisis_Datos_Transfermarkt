@@ -307,9 +307,9 @@ class scraping:
     def scraper_empresas(url):
         pass
 
-
-url = r"https://www.transfermarkt.com/transfers/saisontransfers/statistik?land_id=0&ausrichtung=&spielerposition_id=&altersklasse=&leihe=&transferfenster=&saison-id=0&plus=1"
-scraper = scraping()
-transfers = scraper.scraper_transferencias(url)
-from pprint import pprint
-pprint(transfers)
+if __name__ == '__main__':
+    url = r"https://www.transfermarkt.com/transfers/saisontransfers/statistik?land_id=0&ausrichtung=&spielerposition_id=&altersklasse=&leihe=&transferfenster=&saison-id=0&plus=1"
+    scraper = scraping()
+    transfers = scraper.scraper_transferencias(url)
+    from pprint import pprint
+    pprint(transfers)
