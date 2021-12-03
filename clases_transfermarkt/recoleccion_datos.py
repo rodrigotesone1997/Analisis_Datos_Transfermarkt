@@ -1,3 +1,5 @@
+from time import sleep
+
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -16,14 +18,24 @@ class recoleccion_datos:
 
         opts = Options()
         opts.headless = False  
-        self.browser = Chrome(options=opts)
+        self.driver = Chrome(options=opts)
     
     def recolectar_transferencias(self):
+        return self.driver
         
-        self.browser.get(URL_TRANSFERENCIAS)
-        select = Select(self.browser.find_element(By.ID, "selUJM"))
-        select.select_by_visible_text('19/20 ')
 
 
 rd = recoleccion_datos()
-rd.recolectar_transferencias()
+driver = rd.recolectar_transferencias()
+
+
+driver.get(URL_TRANSFERENCIAS)
+sleep(3)
+# Aceptar cookies
+driver.switch_to.frame(1)
+driver.find_element(By.CSS_SELECTOR, "button[title='ACCEPT ALL']").click()
+driver.switch_to.parent_frame()
+
+selects = driver.find_elements(By.TAG_NAME, "select")
+
+Select(selects[0]).select_by_visible_text('19/20')
